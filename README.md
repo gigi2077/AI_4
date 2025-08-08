@@ -18,10 +18,22 @@ A single-page web application that provides a natural language interface for que
 
 ### Installation
 
-1.  Clone the repository: `git clone <repository-url>`
-2.  Navigate to the project directory: `cd <project-directory>`
-3.  Create a `config.js` file by copying the `config.example.js` template: `cp config.example.js config.js`
-4.  Open `config.js` and add your Google Gemini API key.
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/gigi2077/AI_4.git
+    cd AI_4
+    ```
+
+2.  **Create and configure the `config.js` file:**
+    *   In the project's root directory, create a `config.js` file by copying the `config.example.js` template.
+        ```bash
+        cp config.example.js config.js
+        ```
+    *   Open `config.js` and add your Google Gemini API key.
+        ```javascript
+        // config.js
+        const API_KEY = "YOUR_API_KEY";
+        ```
 
 ## Usage
 
