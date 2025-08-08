@@ -18,20 +18,10 @@ A single-page web application that provides a natural language interface for que
 
 ### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/georgian-corruption-qa.git
-    cd georgian-corruption-qa
-    ```
-
-2.  **Configure the API Key:**
-    *   In the project's root directory, you will find a file named `config.js`.
-    *   Open `config.js` and replace `"YOUR_API_KEY"` with your actual Google Gemini API key.
-
-    ```javascript
-    // config.js
-    const API_KEY = "YOUR_API_KEY";
-    ```
+1.  Clone the repository: `git clone <repository-url>`
+2.  Navigate to the project directory: `cd <project-directory>`
+3.  Create a `config.js` file by copying the `config.example.js` template: `cp config.example.js config.js`
+4.  Open `config.js` and add your Google Gemini API key.
 
 ## Usage
 
