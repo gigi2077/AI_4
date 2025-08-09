@@ -167,6 +167,8 @@
         <div id="answer-box" role="status"><span class="answer-placeholder">პასუხი აქ გამოჩნდება...</span></div>
     </div>
 
+    <script src="config.js"></script>
+
     <script>
         const askButton = document.getElementById('ask-button');
         const questionInput = document.getElementById('question-input');
@@ -187,7 +189,7 @@
                 buttonText.innerHTML = '<span class="loader"></span>';
                 
                 // Center-align the text ONLY for the loading message
-                answerBox.style.textAlign = 'center';
+                answerBox.style.textAlign = 'center'; 
                 answerBox.innerHTML = '<span class="answer-placeholder">ვამუშავებ ინფორმაციას, გთხოვთ დაელოდოთ...</span>';
             } else {
                 askButton.disabled = false;
@@ -195,13 +197,18 @@
                 buttonText.textContent = 'პასუხის მიღება';
                 
                 // IMPORTANT: Revert text alignment to left for the actual answer
-                answerBox.style.textAlign = 'left';
+                answerBox.style.textAlign = 'left'; 
             }
         }
         // --- MODIFIED SECTION END ---
 
         askButton.addEventListener('click', async () => {
             const userQuestion = questionInput.value;
+
+            if (typeof API_KEY === 'undefined' || !API_KEY) {
+                answerBox.innerHTML = '<span class="answer-placeholder">API გასაღები არ არის კონფიგურირებული. გთხოვთ, შეამოწმოთ config.js ფაილი.</span>';
+                return;
+            }
 
             if (!userQuestion.trim()) {
                 answerBox.innerHTML = '<span class="answer-placeholder">გთხოვთ, ჯერ შეიყვანოთ კითხვა!</span>';
@@ -234,10 +241,12 @@ ${websiteContext}
 **Question:**
 ${userQuestion}`;
 
-                const apiResponse = await fetch(`/api/prompt`, {
+                const apiRequestBody = { "contents": [{ "parts": [{ "text": fullPrompt }] }] };
+                
+                const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: fullPrompt })
+                    body: JSON.stringify(apiRequestBody)
                 });
 
                 if (!apiResponse.ok) {
