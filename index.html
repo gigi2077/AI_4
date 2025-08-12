@@ -242,7 +242,7 @@ ${userQuestion}`;
 
                 if (!apiResponse.ok) {
                     const errorData = await apiResponse.json();
-                    throw new Error(`API შეცდომა: ${errorData.error.message}`);
+                    throw new Error(`API შეცდომა: ${errorData.error}`);
                 }
 
                 const responseData = await apiResponse.json();
