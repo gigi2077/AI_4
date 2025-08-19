@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const { fetch } = require('undici');
 
 exports.handler = async function (event, context) {
   const { prompt } = JSON.parse(event.body);
