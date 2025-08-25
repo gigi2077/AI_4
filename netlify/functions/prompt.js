@@ -1,13 +1,11 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 exports.handler = async function(event, context) {
-  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
-    // 1. Get the API Key from Netlify's environment variables
     const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
       console.error("Critical Error: GEMINI_API_KEY is not defined.");
@@ -17,14 +15,9 @@ exports.handler = async function(event, context) {
       };
     }
 
-    // 2. Initialize the Google AI client with the key
     const genAI = new GoogleGenerativeAI(API_KEY);
-
-    // ---- Use Gemini 2.5 Flash (official model ID) ----
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    // --------------------------------------------------
 
-    // 3. Get the user's prompt from the request
     const { prompt } = JSON.parse(event.body || "{}");
     if (!prompt) {
       return { 
@@ -33,12 +26,28 @@ exports.handler = async function(event, context) {
       };
     }
 
-    // 4. Call the Gemini API
     const result = await model.generateContent(prompt);
     const response = await result.response;
+
+    // --- NEW, SMARTER CHECKING ---
+    // Log the full response from Google to your Netlify function logs for debugging.
+    // This will show you exactly WHY a response might be blocked.
+    console.log("Full Gemini Response:", JSON.stringify(response, null, 2));
+
+    // Check if the response was blocked or is empty.
+    if (!response.candidates || response.candidates.length === 0 || !response.candidates[0].content) {
+      console.error("Response was blocked or empty. Finish Reason:", response.promptFeedback?.blockReason || response.candidates?.[0]?.finishReason);
+      
+      // Send a more specific error message to the user
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "მოდელმა უსაფრთხოების ფილტრის გამო პასუხი დაბლოკა. გთხოვთ, შეცვალოთ მოთხოვნა." }) // "The model blocked the response due to the safety filter. Please change the request."
+      };
+    }
+    // --- END OF NEW CHECKING ---
+
     const text = response.text();
 
-    // 5. Send the successful response back to the front-end
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -46,10 +55,7 @@ exports.handler = async function(event, context) {
     };
 
   } catch (error) {
-    console.error("--- Full Error Log ---");
-    console.error(error);
-    console.error("--- End Error Log ---");
-
+    console.error("--- Full Error Log ---", error);
     const errorMessage = error.message || 'An unknown error occurred.';
     return {
       statusCode: 500,
