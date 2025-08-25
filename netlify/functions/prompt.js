@@ -1,36 +1,41 @@
-// We will use the official Google AI SDK now
-import { GoogleGenerativeAI } from "@google/generative-ai";
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// The handler function for Netlify
-export const handler = async (event) => {
-  // We only want to handle POST requests
+exports.handler = async function(event, context) {
+  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
-    // Get the API key from the environment variables
+    // 1. Get the API Key from Netlify's environment variables
     const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
-        throw new Error("GEMINI_API_KEY is not defined in environment variables.");
+      console.error("Critical Error: GEMINI_API_KEY is not defined.");
+      return { 
+        statusCode: 500, 
+        body: JSON.stringify({ error: "The API Key is not configured on the server." }) 
+      };
     }
 
-    // Initialize the Generative AI client
+    // 2. Initialize the Google AI client with the key
     const genAI = new GoogleGenerativeAI(API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // Parse the prompt from the request body
+    // 3. Get the user's prompt from the request
     const { prompt } = JSON.parse(event.body);
     if (!prompt) {
-        return { statusCode: 400, body: JSON.stringify({ error: "Prompt is missing from the request body." }) };
+      return { 
+        statusCode: 400, 
+        body: JSON.stringify({ error: "Prompt is missing from the request." }) 
+      };
     }
 
-    // Generate the content
+    // 4. Call the Gemini API
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    // Return the successful response
+    // 5. Send the successful response back to the front-end
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -38,13 +43,16 @@ export const handler = async (event) => {
     };
 
   } catch (error) {
-    // Log the detailed error to the Netlify function logs for debugging
-    console.error("Error generating content:", error);
-    
-    // Return a generic error message to the user
+    // This block runs if anything in the 'try' block fails
+    console.error("--- Full Error Log ---");
+    console.error(error);
+    console.error("--- End Error Log ---");
+
+    // Send a clear error message back to the front-end
+    const errorMessage = error.message || 'An unknown error occurred.';
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to fetch from Gemini API.' }),
+      body: JSON.stringify({ error: `დაფიქსირდა შეცდომა: ${errorMessage}` }),
     };
   }
 };
