@@ -1,50 +1,51 @@
-# Georgian Corruption Q&A
+## **Project Description: AI-Powered Georgian Corruption Case Q\&A**
 
-A single-page web application that provides a natural language interface for querying a document about alleged high-level corruption cases in Georgia. It uses the Google Gemini AI model to generate answers based exclusively on the provided text.
+### **Executive Summary**
 
-## Key Features
+This project is a web-based application that provides a simple, user-friendly interface for the public to ask questions about a specific document detailing alleged high-level corruption cases in Georgia. It leverages the Google Gemini AI model to understand and answer user queries in natural language, with the responses based exclusively on the provided text. This ensures that the information is unbiased and serves as a reliable tool for citizens, journalists, and researchers.
 
-*   **AI-Powered Q&A:** Ask questions in Georgian and get answers from the AI.
-*   **Scoped Knowledge Base:** The AI's knowledge is strictly limited to the content of the `data.txt` file.
-*   **Simple Interface:** An intuitive and easy-to-use user interface.
-*   **Asynchronous API Integration:** Communicates with the Google Gemini API to provide answers.
+### **Problem Statement & Project Goals**
 
-## Getting Started
+Accessing and understanding complex legal and investigative documents can be challenging for the general public. The information is often dense and lengthy, making it difficult to extract specific information. This project addresses the need for a more accessible way to engage with important civic data, specifically the "[Alleged Cases of High-Level Corruption \- A Periodically Updated List](https://transparency.ge/ge/blog/magali-donis-korupciis-savaraudo-shemtxvevebi-ganaxlebadi-sia)" by Transparency International Georgia.
 
-### Prerequisites
+The primary goals are:
 
-*   A modern web browser (e.g., Google Chrome, Mozilla Firefox).
-*   A Google Gemini API key.
+* To increase public access to and understanding of the information in the source document.  
+* To provide a tool for journalists and researchers to quickly find information within the text.  
+* To demonstrate a practical application of large language models for civic tech.
 
-### Installation
+### **How It Works: From Question to Answer**
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/gigi2077/AI_4.git
-    cd AI_4
-    ```
+The application transforms the static article into an interactive and easily searchable resource. Here’s the journey of a user's question:
 
-2.  **Create and configure the `config.js` file:**
-    *   In the project's root directory, create a `config.js` file by copying the `config.example.js` template.
-        ```bash
-        cp config.example.js config.js
-        ```
-    *   Open `config.js` and add your Google Gemini API key.
-        ```javascript
-        // config.js
-        const API_KEY = "YOUR_API_KEY";
-        ```
+1. **The User Asks a Question:** A user visits the webpage and types their question in plain Georgian into the input box.  
+2. **The Front-End Gathers Context:** The website's code takes the user's question and reads the entire knowledge base—a text file (data.txt) containing the curated information from the Transparency International Georgia article.  
+3. **A Detailed Prompt is Created:** The user's question and the knowledge base are combined into a single, detailed instruction (a "prompt"). This prompt strictly commands the AI to answer *only* using the provided text, to respond in Georgian, and to cite its source.  
+4. **The Back-End Makes the AI Call:** The prompt is sent securely to a Netlify Serverless Function, which acts as a middleman. It takes the prompt and sends it to Google's AI servers using a secure API key.  
+5. **Google's Gemini AI Generates an Answer:** The powerful **Gemini 2.5 Flash AI model** reads the instructions and finds the relevant information within the text to formulate a concise answer and citation.  
+6. **The Answer is Displayed:** The AI's answer is sent back through the Netlify Function to the user's web browser, where it is displayed neatly in the answer box.
 
-## Usage
+### **Technical Architecture and Design**
 
-1.  Open the `index.html` file in your web browser.
-2.  Enter your question in the input field.
-3.  Click the "Ask" button to receive an answer from the AI.
+The application is a single-page web application (SPA) with a serverless backend.
 
-## Contributing
+graph TD  
+    A\[User's Browser\] \--\>|HTTPS Request| B(Netlify Server);  
+    B \--\> C{index.html};  
+    C \--\> A;  
+    A \--\>|API Call to /api/prompt| B;  
+    B \--\>|Invokes Function| D\[Netlify Function: prompt.js\];  
+    D \--\>|Sends Prompt| E\[Google Gemini API\];  
+    E \--\>|Returns Answer| D;  
+    D \--\>|Sends Response| A;
 
-Contributions are welcome. If you would like to contribute to the project, please open an issue or submit a pull request.
+* **Frontend:** HTML, CSS, JavaScript  
+* **Backend:** Node.js (for Netlify Functions)  
+* **AI Model:** Google Gemini 2.5 Flash  
+* **Hosting:** Netlify
 
-## License
+### **Target Audience**
 
-This project is unlicensed and is protected by default copyright laws.
+* **General Public:** Citizens of Georgia who are interested in issues of corruption.  
+* **Journalists:** Reporters who need to quickly find information for their stories.  
+* **Researchers:** Academics and analysts studying corruption in Georgia.
