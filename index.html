@@ -168,56 +168,50 @@
     </div>
 
     <script>
-        const askButton = document.getElementById('ask-button');
-        const questionInput = document.getElementById('question-input');
-        const answerBox = document.getElementById('answer-box');
-        const buttonText = document.getElementById('button-text');
-        const buttonIcon = document.getElementById('button-icon');
+    const askButton = document.getElementById('ask-button');
+    const questionInput = document.getElementById('question-input');
+    const answerBox = document.getElementById('answer-box');
+    const buttonText = document.getElementById('button-text');
+    const buttonIcon = document.getElementById('button-icon');
 
-        function linkifyURLs(text) {
-            const urlRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
-            return text.replace(urlRegex, '<a href="$2" target="_blank">$1</a>');
+    function linkifyURLs(text) {
+        const urlRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+        return text.replace(urlRegex, '<a href="$2" target="_blank">$1</a>');
+    }
+
+    function showLoading(isLoading) {
+        if (isLoading) {
+            askButton.disabled = true;
+            buttonIcon.style.display = 'none';
+            buttonText.innerHTML = '<span class="loader"></span>';
+            answerBox.style.textAlign = 'center';
+            answerBox.innerHTML = '<span class="answer-placeholder">ვამუშავებ ინფორმაციას, გთხოვთ დაელოდოთ...</span>';
+        } else {
+            askButton.disabled = false;
+            buttonIcon.style.display = 'block';
+            buttonText.textContent = 'პასუხის მიღება';
+            answerBox.style.textAlign = 'left';
         }
+    }
 
-        // --- MODIFIED SECTION START ---
-        function showLoading(isLoading) {
-            if (isLoading) {
-                askButton.disabled = true;
-                buttonIcon.style.display = 'none';
-                buttonText.innerHTML = '<span class="loader"></span>';
-                
-                // Center-align the text ONLY for the loading message
-                answerBox.style.textAlign = 'center';
-                answerBox.innerHTML = '<span class="answer-placeholder">ვამუშავებ ინფორმაციას, გთხოვთ დაელოდოთ...</span>';
-            } else {
-                askButton.disabled = false;
-                buttonIcon.style.display = 'block';
-                buttonText.textContent = 'პასუხის მიღება';
-                
-                // IMPORTANT: Revert text alignment to left for the actual answer
-                answerBox.style.textAlign = 'left';
-            }
+    askButton.addEventListener('click', async () => {
+        const userQuestion = questionInput.value;
+
+        if (!userQuestion.trim()) {
+            answerBox.innerHTML = '<span class="answer-placeholder">გთხოვთ, ჯერ შეიყვანოთ კითხვა!</span>';
+            return;
         }
-        // --- MODIFIED SECTION END ---
+        
+        showLoading(true);
 
-        askButton.addEventListener('click', async () => {
-            const userQuestion = questionInput.value;
-
-            if (!userQuestion.trim()) {
-                answerBox.innerHTML = '<span class="answer-placeholder">გთხოვთ, ჯერ შეიყვანოთ კითხვა!</span>';
-                return;
+        try {
+            const dataFileResponse = await fetch('data.txt');
+            if (!dataFileResponse.ok) {
+                throw new Error('ვერ მოხერხდა data.txt ფაილის ჩატვირთვა. დარწმუნდით, რომ ის index.html-ის გვერდით მდებარეობს.');
             }
+            const websiteContext = await dataFileResponse.text();
             
-            showLoading(true);
-
-            try {
-                const dataFileResponse = await fetch('data.txt');
-                if (!dataFileResponse.ok) {
-                    throw new Error('ვერ მოხერხდა data.txt ფაილის ჩატვირთვა. დარწმუნდით, რომ ის index.html-ის გვერდით მდებარეობს.');
-                }
-                const websiteContext = await dataFileResponse.text();
-                
-                const fullPrompt = `You are an expert assistant answering questions about alleged corruption cases in Georgia. You must base your answers strictly and exclusively on the provided Context. Follow these rules with extreme precision:
+            const fullPrompt = `You are an expert assistant answering questions about alleged corruption cases in Georgia. You must base your answers strictly and exclusively on the provided Context. Follow these rules with extreme precision:
 
 1.  **Relevance:** Your answer MUST ONLY contain information that is directly and specifically relevant to the user's Question. Do not include information about other cases or individuals, even if they are in the Context.
 2.  **Language:** Your final, entire response MUST be in the Georgian language (ქართული).
@@ -234,37 +228,37 @@ ${websiteContext}
 **Question:**
 ${userQuestion}`;
 
-                const apiResponse = await fetch(`/api/prompt`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: fullPrompt })
-                });
+            const apiResponse = await fetch(`/api/prompt`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: fullPrompt })
+            });
 
-                if (!apiResponse.ok) {
-                    const errorData = await apiResponse.json();
-                    throw new Error(`API შეცდომა: ${errorData.error}`);
-                }
+            const responseData = await apiResponse.json();
 
-                const responseData = await apiResponse.json();
-                
-                if (responseData.candidates && responseData.candidates.length > 0) {
-                    const answer = responseData.candidates[0].content.parts[0].text;
-                    answerBox.innerHTML = linkifyURLs(answer);
-                } else {
-                    answerBox.innerHTML = '<span class="answer-placeholder">მოდელმა არასწორი პასუხი დააბრუნა. გთხოვთ, სცადოთ თავიდან.</span>';
-                }
-
-            } catch (error) {
-                console.error("Error:", error);
-                answerBox.innerHTML = `<span class="answer-placeholder">დაფიქსირდა შეცდომა: ${error.message}</span>`;
-            } finally {
-                // --- MODIFIED SECTION START ---
-                // This 'finally' block ensures the loading state is always turned off,
-                // whether the API call succeeds or fails.
-                showLoading(false);
-                // --- MODIFIED SECTION END ---
+            if (!apiResponse.ok) {
+                // This now correctly handles errors sent from the Netlify function
+                throw new Error(responseData.error || 'API შეცდომა');
             }
-        });
-    </script>
+            
+            // --- THIS IS THE CORRECTED LOGIC ---
+            // We now look for 'responseData.text' which is what our backend sends.
+            if (responseData.text) {
+                const answer = responseData.text;
+                answerBox.innerHTML = linkifyURLs(answer);
+            } else {
+                // This is a fallback, in case the text is empty for some reason
+                answerBox.innerHTML = '<span class="answer-placeholder">მოდელმა არასწორი პასუხი დააბრუნა. გთხოვთ, სცადოთ თავიდან.</span>';
+            }
+            // --- END OF CORRECTION ---
+
+        } catch (error) {
+            console.error("Error:", error);
+            answerBox.innerHTML = `<span class="answer-placeholder">დაფიქსირდა შეცდომა: ${error.message}</span>`;
+        } finally {
+            showLoading(false);
+        }
+    });
+</script>
 </body>
 </html>
