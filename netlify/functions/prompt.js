@@ -19,10 +19,13 @@ exports.handler = async function(event, context) {
 
     // 2. Initialize the Google AI client with the key
     const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    // ---- Use Gemini 2.5 Flash (official model ID) ----
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // --------------------------------------------------
 
     // 3. Get the user's prompt from the request
-    const { prompt } = JSON.parse(event.body);
+    const { prompt } = JSON.parse(event.body || "{}");
     if (!prompt) {
       return { 
         statusCode: 400, 
@@ -43,12 +46,10 @@ exports.handler = async function(event, context) {
     };
 
   } catch (error) {
-    // This block runs if anything in the 'try' block fails
     console.error("--- Full Error Log ---");
     console.error(error);
     console.error("--- End Error Log ---");
 
-    // Send a clear error message back to the front-end
     const errorMessage = error.message || 'An unknown error occurred.';
     return {
       statusCode: 500,
