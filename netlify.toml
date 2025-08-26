@@ -1,5 +1,5 @@
 [build]
-  command = "node build.js"
+  command = "pip install -r requirements.txt && node build.js"
   publish = "dist"
 
 [functions]
