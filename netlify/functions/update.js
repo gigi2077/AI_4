@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 
 exports.handler = async function(event, context) {
     return new Promise((resolve, reject) => {
-        const python = spawn('python3', ['update_data.py']);
+        const python = spawn('python', ['update_data.py']);
 
         let stdout = '';
         let stderr = '';
