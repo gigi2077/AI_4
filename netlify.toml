@@ -10,10 +10,13 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
 [[redirects]]
   from = "/api/debug"
   to = "/.netlify/functions/debug"
   status = 200
- [functions]
+
+[functions]
   [functions."prompt"]
-    timeout = 40
+    # Set timeout to a valid number (max is 26)
+    timeout = 25
