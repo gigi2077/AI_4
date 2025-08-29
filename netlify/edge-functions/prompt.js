@@ -1,5 +1,4 @@
 import { GoogleGenAI } from "https://esm.sh/@google/genai";
-import { GoogleGenAI } from "@google/genai";
 
 const systemInstruction = `You are an expert assistant answering questions about alleged corruption cases in Georgia. You must base your answers strictly and exclusively on the provided Context. Follow these rules with extreme precision:
 
@@ -16,7 +15,6 @@ export default async (request, context) => {
   }
 
   try {
-    // In Deno (Edge Functions), use Deno.env.get() for environment variables
     const API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!API_KEY) {
       console.error("Critical Error: GEMINI_API_KEY is not defined.");
@@ -24,13 +22,12 @@ export default async (request, context) => {
     }
 
     const ai = new GoogleGenAI({ apiKey: API_KEY });
-    const { prompt } = await request.json(); // Edge Functions use the standard Request object
+    const { prompt } = await request.json();
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Prompt is missing from the request." }), { status: 400 });
     }
 
-    // 1. Use generateContentStream to get a streaming result
     const geminiStream = await ai.models.generateContentStream({
       model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -46,19 +43,16 @@ export default async (request, context) => {
       }
     });
 
-    // 2. Create a new ReadableStream to send back to the client
     const responseStream = new ReadableStream({
       async start(controller) {
         for await (const chunk of geminiStream) {
           const text = chunk.text;
-          // Encode the text chunk and send it to the client
           controller.enqueue(new TextEncoder().encode(text));
         }
         controller.close();
       }
     });
 
-    // 3. Return the stream in a standard Response object
     return new Response(responseStream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' }
     });
