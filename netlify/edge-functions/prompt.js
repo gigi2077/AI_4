@@ -46,7 +46,9 @@ export default async (request, context) => {
     const responseStream = new ReadableStream({
       async start(controller) {
         for await (const chunk of geminiStream) {
-          const text = chunk.text;
+          let text = chunk.text;
+          // Replace markdown bold with HTML bold tags
+          text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
           controller.enqueue(new TextEncoder().encode(text));
         }
         controller.close();
