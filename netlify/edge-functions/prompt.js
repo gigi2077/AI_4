@@ -1,3 +1,6 @@
+// Polyfill for the 'global' object, which is expected by some Node.js libraries.
+// Deno/Edge Functions use 'self' as the global scope. This bridges the gap.
+globalThis.global = self;
 import { GoogleGenAI } from "@google/genai";
 
 const systemInstruction = `You are an expert assistant answering questions about alleged corruption cases in Georgia. You must base your answers strictly and exclusively on the provided Context. Follow these rules with extreme precision:
