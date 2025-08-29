@@ -186,9 +186,16 @@
     const buttonText = document.getElementById('button-text');
     const buttonIcon = document.getElementById('button-icon');
 
-    function linkifyURLs(text) {
+    function processText(text) {
+        // First, replace markdown-style links with HTML anchor tags
         const urlRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
-        return text.replace(urlRegex, '<a href="$2" target="_blank">$1</a>');
+        let processedText = text.replace(urlRegex, '<a href="$2" target="_blank">$1</a>');
+        
+        // Then, replace markdown-style bold with HTML bold tags
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        processedText = processedText.replace(boldRegex, '<b>$1</b>');
+        
+        return processedText;
     }
 
     function showLoading(isLoading) {
@@ -252,7 +259,7 @@
                     const chunkText = decoder.decode(value);
                     fullText += chunkText;
                     // Re-render the full text, processing for links each time
-                    answerBox.innerHTML = linkifyURLs(fullText);
+                    answerBox.innerHTML = processText(fullText);
                 }
             }
 
