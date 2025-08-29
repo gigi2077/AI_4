@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "npm:@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 const systemInstruction = `You are an expert assistant answering questions about alleged corruption cases in Georgia. You must base your answers strictly and exclusively on the provided Context. Follow these rules with extreme precision:
 

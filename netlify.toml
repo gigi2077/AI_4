@@ -1,12 +1,11 @@
 [build]
   command = "pip install -r requirements.txt && python update_data.py && node build.js"
   publish = "dist"
+  edge_functions_import_map = "import_map.json"
 
 [build.environment]
   PYTHON_VERSION = "3.9"
 
-# This block tells Netlify to run the "prompt" edge function
-# whenever a request is made to "/api/prompt".
 [[edge_functions]]
   path = "/api/prompt"
   function = "prompt"
