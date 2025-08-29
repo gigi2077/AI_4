@@ -1,22 +1,12 @@
 [build]
   command = "pip install -r requirements.txt && python update_data.py && node build.js"
   publish = "dist"
-  functions = "netlify/functions"
 
 [build.environment]
   PYTHON_VERSION = "3.9"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/api/debug"
-  to = "/.netlify/functions/debug"
-  status = 200
-
-[functions]
-  [functions."prompt"]
-    # Set timeout to a valid number (max is 26)
-    timeout = 25
+# This block tells Netlify to run the "prompt" edge function
+# whenever a request is made to "/api/prompt".
+[[edge_functions]]
+  path = "/api/prompt"
+  function = "prompt"

@@ -177,6 +177,8 @@
         .catch(error => console.error('Error triggering update:', error));
     </script>
 
+   </script>
+    
     <script>
     const askButton = document.getElementById('ask-button');
     const questionInput = document.getElementById('question-input');
@@ -194,13 +196,10 @@
             askButton.disabled = true;
             buttonIcon.style.display = 'none';
             buttonText.innerHTML = '<span class="loader"></span>';
-            answerBox.style.textAlign = 'center';
-            answerBox.innerHTML = '<span class="answer-placeholder">ვამუშავებ ინფორმაციას, გთხოვთ დაელოდოთ...</span>';
         } else {
             askButton.disabled = false;
             buttonIcon.style.display = 'block';
             buttonText.textContent = 'პასუხის მიღება';
-            answerBox.style.textAlign = 'left';
         }
     }
 
@@ -213,20 +212,18 @@
         }
         
         showLoading(true);
+        // Clear the answer box for the new streaming response
+        answerBox.innerHTML = ''; 
+        answerBox.style.textAlign = 'left';
 
         try {
             const dataFileResponse = await fetch('data.txt');
             if (!dataFileResponse.ok) {
-                throw new Error('ვერ მოხერხდა data.txt ფაილის ჩატვირთვა. დარწმუნდით, რომ ის index.html-ის გვერდით მდებარეობს.');
+                throw new Error('ვერ მოხერხდა data.txt ფაილის ჩატვირთვა.');
             }
             const websiteContext = await dataFileResponse.text();
             
-            const fullPrompt = `**Context:**
-${websiteContext}
----
-
-**Question:**
-${userQuestion}`;
+            const fullPrompt = `**Context:**\n${websiteContext}\n---\n\n**Question:**\n${userQuestion}`;
 
             const apiResponse = await fetch(`/api/prompt`, {
                 method: 'POST',
@@ -234,23 +231,30 @@ ${userQuestion}`;
                 body: JSON.stringify({ prompt: fullPrompt })
             });
 
-            const responseData = await apiResponse.json();
+            if (!apiResponse.ok || !apiResponse.body) {
+                const errorData = await apiResponse.json();
+                throw new Error(errorData.error || 'API შეცდომა');
+            }
 
-            if (!apiResponse.ok) {
-                // This now correctly handles errors sent from the Netlify function
-                throw new Error(responseData.error || 'API შეცდომა');
+            // Get the ReadableStream from the response body
+            const reader = apiResponse.body.getReader();
+            const decoder = new TextDecoder();
+            let isDone = false;
+            let fullText = "";
+
+            while (!isDone) {
+                // Read one chunk at a time from the stream
+                const { value, done } = await reader.read();
+                isDone = done;
+
+                if (value) {
+                    // Decode the chunk (which is a Uint8Array) to text and append it
+                    const chunkText = decoder.decode(value);
+                    fullText += chunkText;
+                    // Re-render the full text, processing for links each time
+                    answerBox.innerHTML = linkifyURLs(fullText);
+                }
             }
-            
-            // --- THIS IS THE CORRECTED LOGIC ---
-            // We now look for 'responseData.text' which is what our backend sends.
-            if (responseData.text) {
-                const answer = responseData.text;
-                answerBox.innerHTML = linkifyURLs(answer);
-            } else {
-                // This is a fallback, in case the text is empty for some reason
-                answerBox.innerHTML = '<span class="answer-placeholder">მოდელმა არასწორი პასუხი დააბრუნა. გთხოვთ, სცადოთ თავიდან.</span>';
-            }
-            // --- END OF CORRECTION ---
 
         } catch (error) {
             console.error("Error:", error);

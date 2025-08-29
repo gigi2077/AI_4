@@ -1,6 +1,5 @@
-const { GoogleGenAI } = require("@google/genai");
+import { GoogleGenAI } from "@google/genai";
 
-// The system instruction remains the same, as its content is correct.
 const systemInstruction = `You are an expert assistant answering questions about alleged corruption cases in Georgia. You must base your answers strictly and exclusively on the provided Context. Follow these rules with extreme precision:
 
 1.  **Relevance:** Your answer MUST ONLY contain information that is directly and specifically relevant to the user's Question. Do not include information about other cases or individuals, even if they are in the Context.
@@ -10,38 +9,30 @@ const systemInstruction = `You are an expert assistant answering questions about
 5.  **Information Not Found:** If the answer to the Question cannot be found in the Context, you must reply with ONLY the following Georgian phrase: "მოწოდებულ ტექსტში ამის შესახებ ინფორმაციას ვერ ვპოულობ."
 6.  **Citation:** At the end of your answer, you MUST cite the original source. To do this, find the line at the end of the relevant section in the Context that begins with \`წყარო:\` and exactly copy the source name and its URL. Cite it in the following format: "წყარო: [source name](source URL)". Do not include any other text or explanations."`;
 
-exports.handler = async function(event, context) {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+export default async (request, context) => {
+  if (request.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
   }
 
   try {
-    const API_KEY = process.env.GEMINI_API_KEY;
+    // In Deno (Edge Functions), use Deno.env.get() for environment variables
+    const API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!API_KEY) {
       console.error("Critical Error: GEMINI_API_KEY is not defined.");
-      return { 
-        statusCode: 500, 
-        body: JSON.stringify({ error: "The API Key is not configured on the server." }) 
-      };
+      return new Response(JSON.stringify({ error: "API Key is not configured on the server." }), { status: 500 });
     }
 
-    // Corrected: Use GoogleGenAI with an options object for the constructor.
     const ai = new GoogleGenAI({ apiKey: API_KEY });
+    const { prompt } = await request.json(); // Edge Functions use the standard Request object
 
-    const { prompt } = JSON.parse(event.body || "{}");
     if (!prompt) {
-      return { 
-        statusCode: 400, 
-        body: JSON.stringify({ error: "Prompt is missing from the request." }) 
-      };
+      return new Response(JSON.stringify({ error: "Prompt is missing from the request." }), { status: 400 });
     }
 
-    // Corrected: Use the direct ai.models.generateContent method from the new SDK.
-    const response = await ai.models.generateContent({
+    // 1. Use generateContentStream to get a streaming result
+    const geminiStream = await ai.models.generateContentStream({
       model: "gemini-2.5-flash",
-      contents: [
-        { role: "user", parts: [{ text: prompt }] }
-      ],
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         systemInstruction: systemInstruction,
         generationConfig: {
@@ -53,22 +44,27 @@ exports.handler = async function(event, context) {
         }
       }
     });
-    
-    // Corrected: Access the generated text directly as a property.
-    const text = response.text;
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text }),
-    };
+    // 2. Create a new ReadableStream to send back to the client
+    const responseStream = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of geminiStream) {
+          const text = chunk.text;
+          // Encode the text chunk and send it to the client
+          controller.enqueue(new TextEncoder().encode(text));
+        }
+        controller.close();
+      }
+    });
+
+    // 3. Return the stream in a standard Response object
+    return new Response(responseStream, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    });
 
   } catch (error) {
     console.error("--- Full Error Log ---", error);
     const errorMessage = error.message || 'An unknown error occurred.';
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: `დაფიქსირდა შეცდომა: ${errorMessage}` }),
-    };
+    return new Response(JSON.stringify({ error: `დაფიქსირდა შეცდომა: ${errorMessage}` }), { status: 500 });
   }
 };
