@@ -34,11 +34,11 @@ export default async (request, context) => {
       config: {
         systemInstruction: systemInstruction,
         generationConfig: {
-          temperature: 0.4,
+          temperature: 0.8,
           maxOutputTokens: 8192,
         },
         thinkingConfig: {
-          thinkingBudget: -1
+          thinkingBudget: 0
         }
       }
     });
