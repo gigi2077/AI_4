@@ -38,7 +38,7 @@ export default async (request, context) => {
           maxOutputTokens: 8192,
         },
         thinkingConfig: {
-          thinkingBudget: 0
+          thinkingBudget: -1
         }
       }
     });
