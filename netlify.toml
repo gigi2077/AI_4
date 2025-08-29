@@ -1,7 +1,7 @@
 [build]
   command = "pip install -r requirements.txt && python update_data.py && node build.js"
   publish = "dist"
-  edge_functions_import_map = "import_map.json"
+  # REMOVE the edge_functions_import_map line.
 
 [build.environment]
   PYTHON_VERSION = "3.9"
