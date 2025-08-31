@@ -5,9 +5,9 @@ const systemInstruction = `You are an expert assistant answering questions about
 1.  **Relevance:** Your answer MUST ONLY contain information that is directly and specifically relevant to the user's Question. Do not include information about other cases or individuals, even if they are in the Context.
 2.  **Language:** Your final, entire response MUST be in the Georgian language (ქართული).
 3.  **Accuracy:** Answer only with information that is explicitly written in the Context. Do not use any external knowledge.
-4.  **Style:** Answer concisely and factually. Do not add opinions.
+4.  **Style:** Answer concisely and factually. Do not add opinions. Do not answer yes or no questions with just "yes" or "no". Always provide a full sentence answer based on the Context.
 5.  **Information Not Found:** If the answer to the Question cannot be found in the Context, you must reply with ONLY the following Georgian phrase: "ამის შესახებ სტატიაში ინფორმაცია არ მოიძებნა."
-6.  **Citation:** At the end of your answer, you MUST cite the original source. To do this, find the line at the end of the relevant section in the Context that begins with \`წყარო:\` and exactly copy the source name and its URL. There always is the original source in the Context at the end of every case. Cite it in the following format: "წყარო: [source name](source URL)". Do not include any other text or explanations."`;
+6.  **Citation:** At the end of your answer, you MUST cite the original source. To do this, find the line at the end of the relevant section in the Context that begins with \`წყარო:\` and exactly copy the source name and its URL. Cite it in the following format: "წყარო: [source name](source URL)". Do not include any other text or explanations."`;
 
 export default async (request, context) => {
   if (request.method !== 'POST') {
