@@ -44,6 +44,19 @@ graph TD
 * **AI Model:** Google Gemini 2.5 Flash  
 * **Hosting:** Netlify
 
+### **Data Acquisition and Updates**
+
+The core knowledge base of this application is the `data.txt` file, which contains the text from the Transparency International Georgia article. To ensure the information is always current, a Python script (`update_data.py`) automates the updating process.
+
+Here’s how it works:
+
+1.  **Fetching:** The script sends a request to the article's URL.
+2.  **Parsing:** It uses the `BeautifulSoup` library to parse the raw HTML and precisely extracts the main article content, discarding irrelevant elements like headers, footers, and ads.
+3.  **Cleaning & Conversion:** The extracted HTML is converted into clean, readable Markdown format.
+4.  **Saving:** The final Markdown text is saved into `data.txt`, overwriting the old content.
+
+This process is automatically triggered every time the site is deployed on Netlify, as defined in the `netlify.toml` configuration file. This guarantees that the AI's answers are always based on the latest version of the public document.
+
 ### **Target Audience**
 
 * **General Public:** Citizens of Georgia who are interested in issues of corruption.  

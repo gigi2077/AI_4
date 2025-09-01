@@ -16,24 +16,31 @@ The overall functionality of the application can be visualized as follows:
 
 ```mermaid
 graph TD
-    B{User opens Index.html in browser};
-    B --> C[Web page UI is displayed];
-    C --> D{User types a question and clicks "Ask"};
-    D --> E[JavaScript function is triggered];
-    E --> F{Script reads API_KEY from config.js};
-    E --> G{Script fetches text from data.txt};
-    F & G --> H{Script constructs a prompt for the AI};
-    H --> I[Sends request to Google Gemini API];
-    I --> J{AI generates an answer based on the provided text};
-    J --> K[JavaScript receives the AI response];
-    K --> L{Answer is displayed on the web page};
+    subgraph "Application Workflow"
+        B{User opens Index.html in browser};
+        B --> C[Web page UI is displayed];
+        C --> D{User types a question and clicks "Ask"};
+        D --> E[JavaScript function is triggered];
+        E --> G{Script fetches text from data.txt};
+        G --> H{Script constructs a prompt for the AI};
+        H --> I[Sends request to Google Gemini API];
+        I --> J{AI generates an answer based on the provided text};
+        J --> K[JavaScript receives the AI response];
+        K --> L{Answer is displayed on the web page};
+    end
+
+    subgraph "Data Update Process (Automated)"
+        M[Netlify build process triggers update_data.py] --> N{Script fetches article from URL};
+        N --> O{Parse HTML and extract content};
+        O --> P{Convert to Markdown};
+        P --> Q[Overwrite data.txt];
+    end
 
     subgraph "Browser"
         B
         C
         D
         E
-        F
         G
         H
         K
@@ -81,6 +88,16 @@ graph TD
 *   **Source Article**:
     *   **Title**: მაღალი დონის კორუფციის სავარაუდო შემთხვევები — განახლებადი სია
     *   **URL**: [https://transparency.ge/ge/blog/magali-donis-korupciis-savaraudo-shemtxvevebi-ganaxlebadi-sia](https://transparency.ge/ge/blog/magali-donis-korupciis-savaraudo-shemtxvevebi-ganaxlebadi-sia)
+
+#### 4. `update_data.py`
+
+*   **Purpose**: This Python script automates the process of keeping the `data.txt` file up-to-date with the latest content from the source article.
+*   **Functionality**:
+    *   **Fetching**: It sends an HTTP request to the specified URL of the Transparency International Georgia article.
+    *   **Parsing**: It uses the `BeautifulSoup` library to parse the HTML of the page. It is specifically programmed to find the `<div>` element containing the main article, ensuring that only relevant content is extracted.
+    *   **Conversion**: The script then converts the cleaned HTML into Markdown format using the `markdownify` library.
+    *   **Saving**: The resulting Markdown text is written to `data.txt`, overwriting the previous content.
+*   **Execution**: This script is automatically executed during the Netlify build process, as specified in the `netlify.toml` file. This ensures that the `data.txt` file is always up-to-date with the latest content from the source article before the site is deployed.
 
 ---
 
