@@ -15,7 +15,7 @@ const systemInstruction = `You are an expert assistant answering questions about
    - If multiple name–URL pairs appear, keep each original name paired with its corresponding URL and output them in the same order, separated by "; ".
    - Remove angle brackets and any extra hyphens/spaces around the name; otherwise copy names and URLs EXACTLY as written. 
    - If no URL appears after "წყარო:", output only the source name after "წყარო:" with no link. 
-   - Place the citation at the end of each case and do not add any extra text or commentary.
+   - Place the citation at the end of each case and do not add any extra text or commentary.;
 
 
 export default async (request, context) => {
