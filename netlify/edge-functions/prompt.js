@@ -49,7 +49,7 @@ export default async (request, context) => {
     }
 
     const geminiStream = await ai.models.generateContentStream({
-      model: "gemini-2.5-flash",
+      model: "gemini-flash-latest",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         systemInstruction: systemInstruction,
